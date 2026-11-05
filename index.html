@@ -251,7 +251,7 @@ function toonStand(){
 function partijRegels(w){
   const p = parseTekst(w.tekst);
   if(!p.p1) return `<div class="tegen"><span class="n">${esc(p.tekst)}</span></div>`;
-  return `<div class="tegen"><span class="n">${esc(p.p1)}${p.nieuw?'<span class="lab">nieuw</span>':""}</span><span class="c num">${p.t1}</span>
+  return `<div class="tegen"><span class="n">${esc(p.p1)}${p.nieuw && competitie("nieuw")?'<span class="lab">nieuw</span>':""}</span><span class="c num">${p.t1}</span>
     <span class="n">${esc(p.p2)}</span><span class="c num">${p.t2}</span></div>`;
 }
 
@@ -279,34 +279,47 @@ function lijstPerRonde(dag, regel){
   ).join("");
 }
 
-function uitslagVan(w, datumIso){
+function zoekPartij(c, p){
+  const C = competitie(c);
+  if(!C) return null;
+  const a = spelerNr(C, p.p1), b = spelerNr(C, p.p2);
+  const x = a && b ? partij(C, a, b) : null;
+  return x ? {p, c1: x.pa.car, c2: x.pb ? x.pb.car : null, brt: x.pa.brt, u1: x.pa.uitslag} : null;
+}
+
+// Is de oude ronde afgesloten na deze speelavond? Dan stond er NIEUW in het
+// programma, maar is er geen aparte nieuwe competitie meer: de NIEUW-partijen
+// zitten nu in de lopende ronde, de oude partijen in het archief.
+function afgeslotenNa(dag){
+  return !competitie("nieuw") && dag.wedstrijden.some(w => parseTekst(w.tekst).nieuw);
+}
+
+function uitslagVan(w, dag){
   const p = parseTekst(w.tekst);
   if(!p.p1) return null;
-  const c = p.nieuw ? "nieuw" : "lopend";
-  const C = competitie(c);
-  if(C){
-    const a = spelerNr(C, p.p1), b = spelerNr(C, p.p2);
-    const x = a && b ? partij(C, a, b) : null;
-    if(x) return {p, c1: x.pa.car, c2: x.pb ? x.pb.car : null, brt: x.pa.brt, u1: x.pa.uitslag, pnt1: x.pa.pnt, pnt2: x.pb ? x.pb.pnt : null};
-  }
-  if(p.nieuw){   // terugval: tabblad Wedstrijden
-    const m = (D.wedstrijdenNieuw||[]).find(z => z.datum === datumIso &&
+  const afgesloten = afgeslotenNa(dag);
+  if(p.nieuw){
+    const u = zoekPartij("nieuw", p) || (afgesloten ? zoekPartij("lopend", p) : null);
+    if(u) return u;
+    const m = (D.wedstrijdenNieuw||[]).find(z => z.datum === dag.datum &&
       ((norm(z.p1)===norm(p.p1) && norm(z.p2)===norm(p.p2)) || (norm(z.p1)===norm(p.p2) && norm(z.p2)===norm(p.p1))));
     if(m && m.brt){
       const rechts = norm(m.p1)===norm(p.p1);
       return {p, c1: rechts?m.c1:m.c2, c2: rechts?m.c2:m.c1, brt: m.brt};
     }
+    return {p};
   }
-  return {p};
+  if(afgesloten) return {p, archief: true};
+  return zoekPartij("lopend", p) || {p};
 }
 
 function uitslagHtml(u, tafel){
   const p = u.p, gespeeld = u.brt > 0;
   const w1 = u.u1 === 1, w2 = u.u1 === -1;
   return `<div class="partij"><div class="tafel"><b>${tafel}</b><span>tafel</span></div><div class="tegen">
-    <span class="n ${w1?"won":""}">${esc(p.p1)}${p.nieuw?'<span class="lab">nieuw</span>':""}</span><span class="c num">${gespeeld?u.c1+"/"+p.t1:"–"}</span>
+    <span class="n ${w1?"won":""}">${esc(p.p1)}${p.nieuw && competitie("nieuw")?'<span class="lab">nieuw</span>':""}</span><span class="c num">${gespeeld?u.c1+"/"+p.t1:"–"}</span>
     <span class="n ${w2?"won":""}">${esc(p.p2)}</span><span class="c num">${gespeeld?u.c2+"/"+p.t2:"–"}</span>
-    <span class="extra num">${gespeeld ? u.brt+" beurten" + (u.u1===0?" · gelijk":"") : "nog niet ingevoerd"}</span></div></div>`;
+    <span class="extra num">${gespeeld ? u.brt+" beurten" + (u.u1===0?" · gelijk":"") : u.archief ? "gespeeld in de afgesloten ronde" : "nog niet ingevoerd"}</span></div></div>`;
 }
 
 function toonUitslagen(){
@@ -323,7 +336,7 @@ function toonUitslagen(){
        dagen.map(d=>`<button type="button" data-d="${d.datum}" aria-pressed="${d.datum===gekozenDag}">${kortDatum(d.datum)}</button>`).join("") + `</div>`;
   const dag = dagen.find(d=>d.datum===gekozenDag);
   h += `<p class="sub">${esc(datum(dag.datum))}. Het bolletje staat bij de winnaar.</p>`;
-  h += lijstPerRonde(dag, w => { const u = uitslagVan(w, dag.datum); return u ? uitslagHtml(u, w.tafel) : ""; });
+  h += lijstPerRonde(dag, w => { const u = uitslagVan(w, dag); return u ? uitslagHtml(u, w.tafel) : ""; });
   el.innerHTML = h;
   el.querySelectorAll(".kiesdag button").forEach(b => b.onclick = () => { gekozenDag = b.dataset.d; toonUitslagen(); });
 }
