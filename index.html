@@ -201,9 +201,29 @@ const vandaag = () => { const t = new Date(); return t.getFullYear()+"-"+String(
 const rondeNaam = s => { const m = String(s||"").match(/(\d+)/); return m ? "Ronde " + m[1] : (s || ""); };
 const norm = s => String(s||"").toLowerCase().replace(/\s+/g," ").trim();
 const puntDec = c => c === "nieuw" ? 0 : 1;   // NIEUW zonder decimalen, zoals in Excel
+const ARCH = {};              // afgesloten rondes: nr -> competitie
+const rondeNr = s => { const m = String(s||"").match(/(\d+)\s*$/); return m ? +m[1] : 0; };
 
 /* ---------- hulpen voor de kruistabel ---------- */
-function competitie(c){ return D && D[c] && D[c].spelers && D[c].spelers.length ? D[c] : null; }
+function competitie(c){
+  const C = /^r\d+$/.test(c) ? ARCH[+c.slice(1)] : (D && D[c]);
+  return C && C.spelers && C.spelers.length ? C : null;
+}
+// Alle rondes die je kunt bekijken: afgesloten, lopend en (in de overgangsperiode) nieuw.
+function keuzes(){
+  const k = Object.keys(ARCH).map(Number).sort((a,b)=>a-b)
+    .map(n => ({c: "r"+n, label: "Ronde " + n, sub: " (afgesloten)"}));
+  if(competitie("lopend")) k.push({c: "lopend", label: rondeNaam(D.lopend.ronde), sub: ""});
+  if(competitie("nieuw") && heeftGespeeld("nieuw")) k.push({c: "nieuw", label: rondeNaam(D.nieuw.ronde), sub: " (nieuw)"});
+  return k;
+}
+function keuzeHtml(k, huidig, aanklik){
+  if(k.length < 2) return "";
+  if(k.length === 2) return `<div class="schakel" role="group" aria-label="Kies ronde">` +
+    k.map(x => `<button type="button" data-c="${x.c}" aria-pressed="${x.c===huidig}" ${aanklik(x)}>${esc(x.label)}${x.c==="nieuw"?" (nieuw)":""}</button>`).join("") + `</div>`;
+  return `<div class="kiesdag" role="group" aria-label="Kies ronde">` +
+    k.map(x => `<button type="button" data-c="${x.c}" aria-pressed="${x.c===huidig}" ${aanklik(x)}>${esc(x.label)}${x.c==="nieuw"?" (nieuw)":""}</button>`).join("") + `</div>`;
+}
 function heeftGespeeld(c){ const C = competitie(c); return !!C && C.spelers.some(s => (s.wed||0) > 0); }
 function spelerNr(C, naam){ const s = C.spelers.find(x => norm(x.naam) === norm(naam)); return s ? s.nr : null; }
 function partij(C, a, b){
@@ -222,22 +242,17 @@ function parseTekst(t){
 /* ---------- weergaven ---------- */
 function toonStand(){
   const el = $("#v-stand");
-  const L = competitie("lopend"), N = competitie("nieuw");
-  const nieuwActief = N && heeftGespeeld("nieuw");
-  if(comp === "nieuw" && !nieuwActief) comp = "lopend";
-  const C = comp === "nieuw" ? N : L;
+  const k = keuzes();
+  if(!k.some(x => x.c === comp)) comp = "lopend";
+  const C = competitie(comp);
   if(!C){ el.innerHTML = '<div class="leeg">Er is nog geen stand.</div>'; return; }
+  const afgesloten = comp.startsWith("r");
 
-  let h = "";
-  if(nieuwActief){
-    h += `<div class="schakel" role="group" aria-label="Kies competitie">
-      <button type="button" data-c="lopend" aria-pressed="${comp==="lopend"}">${esc(rondeNaam(L.ronde))}</button>
-      <button type="button" data-c="nieuw" aria-pressed="${comp==="nieuw"}">${esc(rondeNaam(N.ronde))} (nieuw)</button></div>`;
-  }
-  h += `<h2>Stand ${esc(rondeNaam(C.ronde))}</h2>`;
+  let h = keuzeHtml(k, comp, () => "");
+  h += `<h2>${afgesloten ? "Eindstand" : "Stand"} ${esc(rondeNaam(C.ronde))}</h2>`;
   const totaal = C.spelers.reduce((s,x)=>s+(x.wed||0),0)/2;
   const n = C.spelers.length, alle = n*(n-1)/2;
-  h += `<p class="sub">${totaal} van ${alle} wedstrijden gespeeld. Tik op een naam voor de spelerskaart.</p><ol class="stand">`;
+  h += `<p class="sub">${afgesloten ? "Deze ronde is afgesloten." : totaal + " van " + alle + " wedstrijden gespeeld."} Tik op een naam voor de spelerskaart.</p><ol class="stand">`;
   [...C.spelers].sort((a,b)=>(a.plaats??99)-(b.plaats??99) || (b.punten||0)-(a.punten||0)).forEach(s => {
     h += `<li class="${s.plaats===1 && totaal>0?"p1":""}"><a href="#spelers/${comp}/${s.nr}">
       <span class="pl num">${s.plaats ?? "–"}</span>
@@ -245,7 +260,7 @@ function toonStand(){
       <span class="pt num">${nl(s.punten, puntDec(comp))}<small>punten</small></span></a></li>`;
   });
   el.innerHTML = h + "</ol>";
-  el.querySelectorAll(".schakel button").forEach(b => b.onclick = () => { comp = b.dataset.c; toonStand(); });
+  el.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { comp = b.dataset.c; toonStand(); });
 }
 
 function partijRegels(w){
@@ -309,7 +324,7 @@ function uitslagVan(w, dag){
     }
     return {p};
   }
-  if(afgesloten) return {p, archief: true};
+  if(afgesloten) return zoekPartij("r" + (rondeNr(D.lopend && D.lopend.ronde) - 1), p) || {p, archief: true};
   return zoekPartij("lopend", p) || {p};
 }
 
@@ -353,21 +368,15 @@ function toonSpelers(deel){
     });
     el.innerHTML = h + "</ul>"; return;
   }
-  const c = c0 === "nieuw" && competitie("nieuw") ? "nieuw" : "lopend";
+  const c = competitie(c0 || "") ? c0 : "lopend";
   const C = competitie(c);
   const S = C.spelers.find(s => s.nr === +nr0);
   if(!S){ location.hash = "#spelers"; return; }
 
   let h = `<button type="button" class="terug" onclick="history.length>1?history.back():location.hash='#spelers'">Alle spelers</button>`;
-  const N = competitie("nieuw");
-  if(N && heeftGespeeld("nieuw")){
-    const ander = c === "lopend" ? "nieuw" : "lopend";
-    const Sa = competitie(ander).spelers.find(s => norm(s.naam) === norm(S.naam));
-    if(Sa) h += `<div class="schakel" role="group" aria-label="Kies competitie">
-      <button type="button" aria-pressed="${c==="lopend"}" onclick="location.replace('#spelers/lopend/${c==="lopend"?S.nr:Sa.nr}')">${esc(rondeNaam(D.lopend.ronde))}</button>
-      <button type="button" aria-pressed="${c==="nieuw"}" onclick="location.replace('#spelers/nieuw/${c==="nieuw"?S.nr:Sa.nr}')">${esc(rondeNaam(D.nieuw.ronde))} (nieuw)</button></div>`;
-  }
-  h += `<div class="kaart-kop"><h2>${esc(S.naam)}</h2><p class="sub">${esc(rondeNaam(C.ronde))}${c==="nieuw"?" (nieuw)":""} · te maken: ${S.teMaken} caramboles</p></div>
+  const metSpeler = keuzes().map(x => ({...x, sp: competitie(x.c).spelers.find(z => norm(z.naam) === norm(S.naam))})).filter(x => x.sp);
+  h += keuzeHtml(metSpeler, c, x => `onclick="location.replace('#spelers/${x.c}/${x.sp.nr}')"`);
+  h += `<div class="kaart-kop"><h2>${esc(S.naam)}</h2><p class="sub">${esc(rondeNaam(C.ronde))}${c==="nieuw"?" (nieuw)":c.startsWith("r")?" (afgesloten)":""} · te maken: ${S.teMaken} caramboles</p></div>
     <div class="cijfers num">
       <div><b>${S.plaats ?? "–"}</b><span>plaats</span></div>
       <div><b>${nl(S.punten, puntDec(c))}</b><span>punten</span></div>
@@ -389,6 +398,7 @@ function toonSpelers(deel){
   }
   const gespeeld = new Set(S.partijen.map(p=>p.tegen));
   const open = C.spelers.filter(s => s.nr !== S.nr && !gespeeld.has(s.nr)).map(s=>s.naam).sort((a,b)=>a.localeCompare(b,"nl"));
+  if(c.startsWith("r")){ el.innerHTML = h; return; }
   h += `<h2>Nog te spelen</h2>`;
   h += open.length ? `<ul class="open">${open.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>` : `<p class="sub">Alle partijen van deze ronde zijn gespeeld.</p>`;
   el.innerHTML = h;
@@ -427,6 +437,9 @@ async function laad(){
     const r = await fetch("data.json?t=" + Date.now(), {cache: "no-store"});
     if(!r.ok) throw new Error(r.status);
     D = await r.json();
+    await Promise.allSettled((D.archief||[]).filter(a => !ARCH[a.nr]).map(a =>
+      fetch(a.bestand + "?t=" + Date.now(), {cache: "no-store"}).then(x => x.ok ? x.json() : null)
+        .then(j => { if(j && j.competitie) ARCH[a.nr] = j.competitie; })));
     $("#titel").textContent = D.titel || "14 man driebanden";
     const [dd, tijd] = (D.bijgewerkt||"").split("T");
     $("#kopregel").textContent = (D.vereniging || "").replace(/^Biljartvereniging\s+/i,"") + (dd ? " · bijgewerkt " + kortDatum(dd) + (tijd?" "+tijd:"") : "");
