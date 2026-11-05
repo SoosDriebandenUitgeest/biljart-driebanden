@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>14 man driebanden</title>
+<title>De SooS Driebanden</title>
 <meta name="theme-color" content="#17583a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Driebanden">
+<meta name="apple-mobile-web-app-title" content="SooS Driebanden">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317583a'/%3E%3Ccircle cx='20' cy='38' r='10' fill='%23fff'/%3E%3Ccircle cx='40' cy='24' r='10' fill='%23e8b500'/%3E%3Ccircle cx='46' cy='46' r='8' fill='%23c8102e'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +151,7 @@ footer{max-width:760px;margin:28px auto 0;padding:0 16px;color:var(--grijs);font
   <div class="kop-in">
     <div class="ballen" aria-hidden="true"><span class="bal w"></span><span class="bal g"></span><span class="bal r"></span></div>
     <div>
-      <h1 id="titel">14 man driebanden</h1>
+      <h1 id="titel">De SooS Driebanden</h1>
       <p id="kopregel">Gegevens laden…</p>
     </div>
   </div>
@@ -440,9 +440,8 @@ async function laad(){
     await Promise.allSettled((D.archief||[]).filter(a => !ARCH[a.nr]).map(a =>
       fetch(a.bestand + "?t=" + Date.now(), {cache: "no-store"}).then(x => x.ok ? x.json() : null)
         .then(j => { if(j && j.competitie) ARCH[a.nr] = j.competitie; })));
-    $("#titel").textContent = D.titel || "14 man driebanden";
     const [dd, tijd] = (D.bijgewerkt||"").split("T");
-    $("#kopregel").textContent = (D.vereniging || "").replace(/^Biljartvereniging\s+/i,"") + (dd ? " · bijgewerkt " + kortDatum(dd) + (tijd?" "+tijd:"") : "");
+    $("#kopregel").textContent = (dd ? "Bijgewerkt " + kortDatum(dd) + (tijd?" "+tijd:"") : "");
     $("#voet").textContent = D.volgendeSpeeldag ? "Volgende speeldag: " + datum(D.volgendeSpeeldag) + "." : "";
     route();
   }catch(e){
