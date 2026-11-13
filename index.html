@@ -288,9 +288,11 @@ function toonProgramma(){
 
 function lijstPerRonde(dag, regel){
   const per = {};
-  dag.wedstrijden.forEach(w => (per[w.ronde] = per[w.ronde] || []).push(w));
-  return Object.keys(per).map(Number).sort((a,b)=>a-b).map(r =>
-    `<div class="ronde">Wedstrijd ${r}</div>` + per[r].sort((a,b)=>a.tafel-b.tafel).map(regel).join("")
+  dag.wedstrijden.forEach(w => { const r = w.ronde || 0; (per[r] = per[r] || []).push(w); });
+  // Ronde 0 = partij die niet op de wedstrijdlijst stond: onderaan.
+  return Object.keys(per).map(Number).sort((a,b)=>(a||99)-(b||99)).map(r =>
+    `<div class="ronde">${r ? "Wedstrijd " + r : "Overige partijen"}</div>` +
+    per[r].sort((a,b)=>(a.tafel||0)-(b.tafel||0)).map(regel).join("")
   ).join("");
 }
 
@@ -328,10 +330,20 @@ function uitslagVan(w, dag){
   return zoekPartij("lopend", p) || {p};
 }
 
+// Uitslag uit het logboek van de speelavond (D.uitslagen): Excel legt bij
+// "Uitslagen invoeren" per wedstrijd ronde, tafel, caramboles en beurten vast.
+// Winnaar = hoogste percentage van de te maken caramboles (zoals in Excel).
+function uitslagUitLog(w){
+  const p = {p1: w.p1, t1: w.tm1, p2: w.p2, t2: w.tm2, nieuw: !!w.nieuw};
+  if(!(w.brt > 0)) return {p};
+  const v = (w.tm1 ? w.c1 / w.tm1 : 0) - (w.tm2 ? w.c2 / w.tm2 : 0);
+  return {p, c1: w.c1, c2: w.c2, brt: w.brt, u1: Math.abs(v) < 1e-9 ? 0 : v > 0 ? 1 : -1};
+}
+
 function uitslagHtml(u, tafel){
   const p = u.p, gespeeld = u.brt > 0;
   const w1 = u.u1 === 1, w2 = u.u1 === -1;
-  return `<div class="partij"><div class="tafel"><b>${tafel}</b><span>tafel</span></div><div class="tegen">
+  return `<div class="partij"><div class="tafel"><b>${tafel || "–"}</b><span>tafel</span></div><div class="tegen">
     <span class="n ${w1?"won":""}">${esc(p.p1)}${p.nieuw && competitie("nieuw")?'<span class="lab">nieuw</span>':""}</span><span class="c num">${gespeeld?u.c1+"/"+p.t1:"–"}</span>
     <span class="n ${w2?"won":""}">${esc(p.p2)}</span><span class="c num">${gespeeld?u.c2+"/"+p.t2:"–"}</span>
     <span class="extra num">${gespeeld ? u.brt+" beurten" + (u.u1===0?" · gelijk":"") : u.archief ? "gespeeld in de afgesloten ronde" : "nog niet ingevoerd"}</span></div></div>`;
@@ -340,7 +352,13 @@ function uitslagHtml(u, tafel){
 function toonUitslagen(){
   const el = $("#v-uitslagen");
   const vd = vandaag();
-  const dagen = (D.programma||[]).filter(x => x.datum <= vd).sort((a,b)=>b.datum.localeCompare(a.datum));
+  // Speelavonden uit het logboek gaan voor; avonden die daar niet in staan
+  // worden zoals voorheen afgeleid uit de wedstrijdlijst en de stand.
+  const perDatum = {};
+  (D.programma||[]).filter(x => x.datum <= vd).forEach(x => perDatum[x.datum] = x);
+  (D.uitslagen||[]).filter(x => x.datum <= vd && x.wedstrijden && x.wedstrijden.length)
+    .forEach(x => perDatum[x.datum] = {datum: x.datum, wedstrijden: x.wedstrijden, log: true});
+  const dagen = Object.values(perDatum).sort((a,b)=>b.datum.localeCompare(a.datum));
   let h = `<h2>Uitslagen</h2>`;
   if(!dagen.length){
     h += `<div class="leeg">Er zijn nog geen uitslagen per speelavond. Alle gespeelde partijen staan op de spelerskaarten.</div>`;
@@ -351,7 +369,7 @@ function toonUitslagen(){
        dagen.map(d=>`<button type="button" data-d="${d.datum}" aria-pressed="${d.datum===gekozenDag}">${kortDatum(d.datum)}</button>`).join("") + `</div>`;
   const dag = dagen.find(d=>d.datum===gekozenDag);
   h += `<p class="sub">${esc(datum(dag.datum))}. Het bolletje staat bij de winnaar.</p>`;
-  h += lijstPerRonde(dag, w => { const u = uitslagVan(w, dag); return u ? uitslagHtml(u, w.tafel) : ""; });
+  h += lijstPerRonde(dag, w => { const u = dag.log ? uitslagUitLog(w) : uitslagVan(w, dag); return u ? uitslagHtml(u, w.tafel) : ""; });
   el.innerHTML = h;
   el.querySelectorAll(".kiesdag button").forEach(b => b.onclick = () => { gekozenDag = b.dataset.d; toonUitslagen(); });
 }
