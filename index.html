@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>De SooS Driebanden</title>
+<meta name="description" content="Stand, programma, uitslagen en spelerskaarten van de 14 man driebanden.">
 <meta name="theme-color" content="#17583a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SooS Driebanden">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317583a'/%3E%3Ccircle cx='20' cy='38' r='10' fill='%23fff'/%3E%3Ccircle cx='40' cy='24' r='10' fill='%23e8b500'/%3E%3Ccircle cx='46' cy='46' r='8' fill='%23c8102e'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
   --laken:#17583a;      /* biljartlaken */
@@ -25,6 +25,7 @@
   --lijn:#dfe4e1;
   --vlak:#f2f5f3;
   --bg:#ffffff;
+  --mij:#fff4cc;
   --winst:#17583a;
   --verlies:#c8102e;
   --gelijk:#8a6d00;
@@ -32,7 +33,7 @@
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --inkt:#eef2ef; --grijs:#a7b1ab; --lijn:#2b3530; --vlak:#1a221e; --bg:#111714;
+    --inkt:#eef2ef; --grijs:#a7b1ab; --lijn:#2b3530; --vlak:#1a221e; --bg:#111714; --mij:#2f2a12;
     --winst:#5fc58f; --verlies:#ff6b7f; --gelijk:#e8c24a;
   }
 }
@@ -40,7 +41,8 @@
 html{-webkit-text-size-adjust:100%}
 body{
   margin:0;background:var(--bg);color:var(--inkt);
-  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  /* systeemlettertype: geen extra download, geen verzoek naar Google */
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   font-size:18px;line-height:1.45;
   padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px);
 }
@@ -64,10 +66,12 @@ header.kop{
 .bal.r{width:20px;height:20px;background:var(--rood);left:36px;top:22px}
 .kop h1{margin:0;font-size:1.45rem;line-height:1.1;font-weight:700;letter-spacing:.01em}
 .kop p{margin:2px 0 0;font-size:.95rem;opacity:.85}
+.kop p .off{display:inline-block;background:var(--rood);color:#fff;border-radius:20px;padding:0 8px;margin-right:6px;font-size:.8rem;font-weight:700;opacity:1}
 
 main{max-width:760px;margin:0 auto;padding:0 16px}
 section[hidden]{display:none}
 h2{font-size:1.35rem;margin:22px 0 4px;line-height:1.2}
+h3{font-size:1.1rem;margin:22px 0 6px}
 .sub{color:var(--grijs);margin:0 0 14px;font-size:.95rem}
 
 /* ---------- schakelaar lopend / nieuw ---------- */
@@ -78,13 +82,20 @@ h2{font-size:1.35rem;margin:22px 0 4px;line-height:1.2}
 /* ---------- stand ---------- */
 ol.stand{list-style:none;margin:0;padding:0}
 ol.stand li{border-bottom:1px solid var(--lijn)}
-ol.stand a{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:10px;padding:12px 2px;color:inherit;text-decoration:none}
+ol.stand a, ol.stand .rij{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:10px;padding:12px 2px;color:inherit;text-decoration:none}
 .pl{font-size:1.5rem;font-weight:700;text-align:center;color:var(--grijs)}
 li.p1 .pl{color:var(--geel)}
 .nm{font-weight:700;font-size:1.08rem}
 .det{color:var(--grijs);font-size:.88rem}
 .pt{font-size:1.35rem;font-weight:700;text-align:right}
 .pt small{display:block;font-size:.75rem;font-weight:400;color:var(--grijs)}
+.weg .nm{text-decoration:line-through;color:var(--grijs)}
+.weg .pt{color:var(--grijs)}
+
+/* eigen naam ("Ik ben ...") */
+.mij{background:var(--mij);box-shadow:inset 4px 0 0 var(--geel)}
+ol.stand li.mij a, ol.stand li.mij .rij{padding-left:8px}
+.partij.mij{padding-left:8px;padding-right:8px}
 
 /* ---------- programma / uitslagen ---------- */
 .dag{margin:18px 0 6px;font-size:1.15rem;font-weight:700}
@@ -99,19 +110,28 @@ li.p1 .pl{color:var(--geel)}
 .tegen .won{font-weight:700}
 .tegen .won::after{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--geel);margin-left:7px;vertical-align:middle}
 .extra{grid-column:1/-1;color:var(--grijs);font-size:.85rem}
-.lab{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--rood);color:#fff;margin-left:6px;vertical-align:2px}
+.lab{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--rood);color:#fff;margin-left:6px;vertical-align:2px;text-decoration:none}
+.lab.grijs{background:var(--grijs)}
+.partij.geann .tafel{background:var(--grijs);border-color:var(--lijn)}
+.partij.geann .n, .partij.geann .c{color:var(--grijs)}
+.partij.geann .c{text-decoration:line-through}
 .kiesdag{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;margin:12px -16px 0;padding-left:16px;padding-right:16px;scrollbar-width:none}
 .kiesdag button{flex:none;font:inherit;font-size:.95rem;padding:8px 14px;border-radius:20px;border:1px solid var(--lijn);background:var(--bg);color:var(--inkt);cursor:pointer}
 .kiesdag button[aria-pressed="true"]{background:var(--laken);border-color:var(--laken);color:#fff;font-weight:700}
 
 /* ---------- spelers ---------- */
 ul.namen{list-style:none;margin:8px 0 0;padding:0}
-ul.namen a{display:flex;justify-content:space-between;align-items:center;padding:14px 2px;border-bottom:1px solid var(--lijn);color:inherit;text-decoration:none;font-size:1.08rem}
-ul.namen a span{color:var(--grijs);font-size:.9rem}
+ul.namen a{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 2px;border-bottom:1px solid var(--lijn);color:inherit;text-decoration:none;font-size:1.08rem}
+ul.namen a span{color:var(--grijs);font-size:.9rem;white-space:nowrap}
+ul.namen a.mij{padding-left:8px}
+ul.namen a.weg b{font-weight:400;text-decoration:line-through;color:var(--grijs)}
+ul.namen b{font-weight:400}
 .terug{display:inline-block;margin-top:14px;font:inherit;font-size:1rem;color:var(--laken);background:none;border:0;padding:6px 0;cursor:pointer;text-decoration:underline}
 @media (prefers-color-scheme: dark){.terug{color:var(--winst)}}
 .kaart-kop{margin:8px 0 12px}
 .kaart-kop h2{margin:8px 0 2px;font-size:1.6rem}
+.ikben{font:inherit;font-size:.95rem;padding:8px 14px;border-radius:20px;border:1px solid var(--lijn);background:var(--bg);color:var(--inkt);cursor:pointer;margin:4px 0 0}
+.ikben[aria-pressed="true"]{background:var(--geel);border-color:var(--geel);color:#1a1d1b;font-weight:700}
 .cijfers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--lijn);border:1px solid var(--lijn);border-radius:10px;overflow:hidden;margin:10px 0 18px}
 .cijfers div{background:var(--bg);padding:10px 8px;text-align:center}
 .cijfers b{display:block;font-size:1.3rem}
@@ -122,6 +142,8 @@ th:first-child,td:first-child{text-align:left}
 td{padding:9px 4px;border-bottom:1px solid var(--lijn);text-align:right;vertical-align:top}
 td.u{font-weight:700;text-align:center;width:28px}
 td.u.w{color:var(--winst)} td.u.v{color:var(--verlies)} td.u.g{color:var(--gelijk)}
+tr.geann td{color:var(--grijs)}
+tr.geann td:not(:first-child){text-decoration:line-through}
 .open{margin:6px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
 .open li{background:var(--vlak);border-radius:20px;padding:4px 12px;font-size:.92rem}
 
@@ -158,6 +180,7 @@ footer{max-width:760px;margin:28px auto 0;padding:0 16px;color:var(--grijs);font
 </header>
 
 <main>
+  <div id="melding"></div>
   <section id="v-stand"></section>
   <section id="v-programma" hidden></section>
   <section id="v-uitslagen" hidden></section>
@@ -180,9 +203,21 @@ footer{max-width:760px;margin:28px auto 0;padding:0 16px;color:var(--grijs);font
 <script>
 "use strict";
 let D = null;                 // data.json
-let comp = "lopend";          // stand: lopend of nieuw
+let comp = "lopend";          // stand: lopend, nieuw of r<nr> (afgesloten)
 let gekozenDag = null;        // uitslagen
+let offline = false;          // laatste poging om te laden mislukt
+let laatsteLaad = 0;          // tijdstip van de laatste poging
 const $ = s => document.querySelector(s);
+
+/* ---------- opslag op de telefoon (werkt ook als die uit staat) ---------- */
+const OPSLAG_DATA = "soos-data", OPSLAG_IK = "soos-ikben", OPSLAG_ARCH = "soos-arch:";
+const opslag = {
+  lees(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  zet(k, v){ try{ localStorage.setItem(k, v); }catch(e){} },
+  weg(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const ikBen = () => opslag.lees(OPSLAG_IK) || "";
+const isIk = naam => !!ikBen() && norm(naam) === norm(ikBen());
 
 /* ---------- opmaak ---------- */
 const nl = (x, d) => (x == null || isNaN(x)) ? "–" :
@@ -209,6 +244,8 @@ function competitie(c){
   const C = /^r\d+$/.test(c) ? ARCH[+c.slice(1)] : (D && D[c]);
   return C && C.spelers && C.spelers.length ? C : null;
 }
+// Rondenummer van een competitie (lopend, nieuw of r<nr>).
+function nrVan(c){ if(/^r\d+$/.test(c)) return +c.slice(1); const C = competitie(c); return C ? rondeNr(C.ronde) : 0; }
 // Alle rondes die je kunt bekijken: afgesloten, lopend en (in de overgangsperiode) nieuw.
 function keuzes(){
   const k = Object.keys(ARCH).map(Number).sort((a,b)=>a-b)
@@ -219,10 +256,10 @@ function keuzes(){
 }
 function keuzeHtml(k, huidig, aanklik){
   if(k.length < 2) return "";
-  if(k.length === 2) return `<div class="schakel" role="group" aria-label="Kies ronde">` +
-    k.map(x => `<button type="button" data-c="${x.c}" aria-pressed="${x.c===huidig}" ${aanklik(x)}>${esc(x.label)}${x.c==="nieuw"?" (nieuw)":""}</button>`).join("") + `</div>`;
-  return `<div class="kiesdag" role="group" aria-label="Kies ronde">` +
-    k.map(x => `<button type="button" data-c="${x.c}" aria-pressed="${x.c===huidig}" ${aanklik(x)}>${esc(x.label)}${x.c==="nieuw"?" (nieuw)":""}</button>`).join("") + `</div>`;
+  const knoppen = k.map(x => `<button type="button" data-c="${x.c}" aria-pressed="${x.c===huidig}" ${aanklik(x)}>${esc(x.label)}${x.c==="nieuw"?" (nieuw)":""}</button>`).join("");
+  return k.length === 2
+    ? `<div class="schakel" role="group" aria-label="Kies ronde">${knoppen}</div>`
+    : `<div class="kiesdag" role="group" aria-label="Kies ronde">${knoppen}</div>`;
 }
 function heeftGespeeld(c){ const C = competitie(c); return !!C && C.spelers.some(s => (s.wed||0) > 0); }
 function spelerNr(C, naam){ const s = C.spelers.find(x => norm(x.naam) === norm(naam)); return s ? s.nr : null; }
@@ -238,8 +275,9 @@ function parseTekst(t){
   if(!m) return {tekst: t};
   return {nieuw: !!m[1], p1: m[2], t1: +m[3], p2: m[4], t2: +m[5]};
 }
+const nieuwLabel = isNieuw => isNieuw && competitie("nieuw") ? '<span class="lab">nieuw</span>' : "";
 
-/* ---------- weergaven ---------- */
+/* ---------- stand ---------- */
 function toonStand(){
   const el = $("#v-stand");
   const k = keuzes();
@@ -251,28 +289,34 @@ function toonStand(){
   let h = keuzeHtml(k, comp, () => "");
   h += `<h2>${afgesloten ? "Eindstand" : "Stand"} ${esc(rondeNaam(C.ronde))}</h2>`;
   const totaal = C.spelers.reduce((s,x)=>s+(x.wed||0),0)/2;
-  const n = C.spelers.length, alle = n*(n-1)/2;
-  h += `<p class="sub">${afgesloten ? "Deze ronde is afgesloten." : totaal + " van " + alle + " wedstrijden gespeeld."} Tik op een naam voor de spelerskaart.</p><ol class="stand">`;
-  [...C.spelers].sort((a,b)=>(a.plaats??99)-(b.plaats??99) || (b.punten||0)-(a.punten||0)).forEach(s => {
-    h += `<li class="${s.plaats===1 && totaal>0?"p1":""}"><a href="#spelers/${comp}/${s.nr}">
-      <span class="pl num">${s.plaats ?? "–"}</span>
-      <span><span class="nm">${esc(s.naam)}</span><br><span class="det num">${s.wed||0} gespeeld · ${s.winst||0}-${s.gelijk||0}-${s.verlies||0} · moy ${nl(s.moy,3)}</span></span>
+  const n = C.spelers.filter(s => !s.teruggetrokken).length, alle = n*(n-1)/2;
+  const weg = C.spelers.filter(s => s.teruggetrokken).map(s => s.naam);
+  h += `<p class="sub">${afgesloten ? "Deze ronde is afgesloten." : totaal + " van " + alle + " wedstrijden gespeeld."}` +
+       `${weg.length ? " Teruggetrokken: " + esc(weg.join(", ")) + " (hun partijen tellen niet mee)." : ""}` +
+       ` Tik op een naam voor de spelerskaart.</p><ol class="stand">`;
+  [...C.spelers].sort((a,b)=>(!!a.teruggetrokken - !!b.teruggetrokken) || (a.plaats??99)-(b.plaats??99) || (b.punten||0)-(a.punten||0)).forEach(s => {
+    const kl = [s.plaats===1 && totaal>0 && !s.teruggetrokken ? "p1" : "", s.teruggetrokken ? "weg" : "", isIk(s.naam) ? "mij" : ""].filter(Boolean).join(" ");
+    h += `<li class="${kl}"><a href="#spelers/${comp}/${s.nr}">
+      <span class="pl num">${s.teruggetrokken ? "–" : (s.plaats ?? "–")}</span>
+      <span><span class="nm">${esc(s.naam)}</span>${s.teruggetrokken ? '<span class="lab grijs">teruggetrokken</span>' : ""}<br><span class="det num">${s.wed||0} gespeeld · ${s.winst||0}-${s.gelijk||0}-${s.verlies||0} · moy ${nl(s.moy,3)}</span></span>
       <span class="pt num">${nl(s.punten, puntDec(comp))}<small>punten</small></span></a></li>`;
   });
   el.innerHTML = h + "</ol>";
   el.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { comp = b.dataset.c; toonStand(); });
 }
 
+/* ---------- programma ---------- */
 function partijRegels(w){
   const p = parseTekst(w.tekst);
   if(!p.p1) return `<div class="tegen"><span class="n">${esc(p.tekst)}</span></div>`;
-  return `<div class="tegen"><span class="n">${esc(p.p1)}${p.nieuw && competitie("nieuw")?'<span class="lab">nieuw</span>':""}</span><span class="c num">${p.t1}</span>
+  return `<div class="tegen"><span class="n">${esc(p.p1)}${nieuwLabel(p.nieuw)}</span><span class="c num">${p.t1}</span>
     <span class="n">${esc(p.p2)}</span><span class="c num">${p.t2}</span></div>`;
 }
+const ikSpeel = w => { const p = parseTekst(w.tekst); return p.p1 && (isIk(p.p1) || isIk(p.p2)); };
 
 function toonProgramma(){
   const el = $("#v-programma");
-  const P = (D.programma||[]).slice().sort((a,b)=>b.datum.localeCompare(a.datum));
+  const P = (D.programma||[]).slice();
   const vd = vandaag();
   const komend = P.filter(x => x.datum >= vd).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
   let h = `<h2>Programma</h2>`;
@@ -282,18 +326,39 @@ function toonProgramma(){
     el.innerHTML = h; return;
   }
   h += `<p class="sub">${esc(datum(komend.datum))}. Achter de naam staat het aantal te maken caramboles.</p>`;
-  h += lijstPerRonde(komend, w => `<div class="partij"><div class="tafel"><b>${w.tafel}</b><span>tafel</span></div>${partijRegels(w)}</div>`);
+  h += lijstPerRonde(komend.wedstrijden, w => `<div class="partij${ikSpeel(w)?" mij":""}"><div class="tafel"><b>${w.tafel}</b><span>tafel</span></div>${partijRegels(w)}</div>`);
   el.innerHTML = h;
 }
 
-function lijstPerRonde(dag, regel){
+function lijstPerRonde(lijst, regel){
   const per = {};
-  dag.wedstrijden.forEach(w => { const r = w.ronde || 0; (per[r] = per[r] || []).push(w); });
-  // Ronde 0 = partij die niet op de wedstrijdlijst stond: onderaan.
-  return Object.keys(per).map(Number).sort((a,b)=>(a||99)-(b||99)).map(r =>
-    `<div class="ronde">${r ? "Wedstrijd " + r : "Overige partijen"}</div>` +
+  lijst.forEach(w => (per[w.ronde || 0] = per[w.ronde || 0] || []).push(w));
+  return Object.keys(per).map(Number).sort((a,b)=>(a||999)-(b||999)).map(r =>
+    `<div class="ronde">${r ? "Wedstrijd " + r : "Niet op de wedstrijdlijst"}</div>` +
     per[r].sort((a,b)=>(a.tafel||0)-(b.tafel||0)).map(regel).join("")
   ).join("");
+}
+
+/* ---------- uitslagen ---------- */
+// Speelavonden uit het Uitslagenlog van Excel (betrouwbaar, ook voor
+// oudere avonden). Avonden die daar niet in staan (van voor het log)
+// worden zoals vroeger uit het programma en de kruistabel opgebouwd.
+const logDag = d => (D.uitslagen||[]).find(x => x.datum === d);
+
+function logHtml(w){
+  const gespeeld = w.brt > 0;
+  const r1 = gespeeld && w.tm1 ? w.c1 / w.tm1 : 0, r2 = gespeeld && w.tm2 ? w.c2 / w.tm2 : 0;
+  const telt = gespeeld && !w.geannuleerd;
+  const gelijk = telt && Math.abs(r1 - r2) < 1e-9;
+  const w1 = telt && !gelijk && r1 > r2, w2 = telt && !gelijk && r2 > r1;
+  const kl = ["partij", w.geannuleerd ? "geann" : "", (isIk(w.p1) || isIk(w.p2)) ? "mij" : ""].filter(Boolean).join(" ");
+  const extra = w.geannuleerd
+    ? `geannuleerd: ${esc(w.teruggetrokken || "een speler")} heeft zich teruggetrokken` + (gespeeld ? ` · ${w.brt} beurten` : "")
+    : gespeeld ? w.brt + " beurten" + (gelijk ? " · gelijk" : "") : "nog niet ingevoerd";
+  return `<div class="${kl}"><div class="tafel"><b>${w.tafel || "–"}</b><span>tafel</span></div><div class="tegen">
+    <span class="n ${w1?"won":""}">${esc(w.p1)}${nieuwLabel(w.nieuw)}${w.geannuleerd?'<span class="lab grijs">geannuleerd</span>':""}</span><span class="c num">${gespeeld ? w.c1 + "/" + w.tm1 : "–"}</span>
+    <span class="n ${w2?"won":""}">${esc(w.p2)}</span><span class="c num">${gespeeld ? w.c2 + "/" + w.tm2 : "–"}</span>
+    <span class="extra num">${extra}</span></div></div>`;
 }
 
 function zoekPartij(c, p){
@@ -330,21 +395,12 @@ function uitslagVan(w, dag){
   return zoekPartij("lopend", p) || {p};
 }
 
-// Uitslag uit het logboek van de speelavond (D.uitslagen): Excel legt bij
-// "Uitslagen invoeren" per wedstrijd ronde, tafel, caramboles en beurten vast.
-// Winnaar = hoogste percentage van de te maken caramboles (zoals in Excel).
-function uitslagUitLog(w){
-  const p = {p1: w.p1, t1: w.tm1, p2: w.p2, t2: w.tm2, nieuw: !!w.nieuw};
-  if(!(w.brt > 0)) return {p};
-  const v = (w.tm1 ? w.c1 / w.tm1 : 0) - (w.tm2 ? w.c2 / w.tm2 : 0);
-  return {p, c1: w.c1, c2: w.c2, brt: w.brt, u1: Math.abs(v) < 1e-9 ? 0 : v > 0 ? 1 : -1};
-}
-
 function uitslagHtml(u, tafel){
   const p = u.p, gespeeld = u.brt > 0;
   const w1 = u.u1 === 1, w2 = u.u1 === -1;
-  return `<div class="partij"><div class="tafel"><b>${tafel || "–"}</b><span>tafel</span></div><div class="tegen">
-    <span class="n ${w1?"won":""}">${esc(p.p1)}${p.nieuw && competitie("nieuw")?'<span class="lab">nieuw</span>':""}</span><span class="c num">${gespeeld?u.c1+"/"+p.t1:"–"}</span>
+  const mij = isIk(p.p1) || isIk(p.p2);
+  return `<div class="partij${mij?" mij":""}"><div class="tafel"><b>${tafel}</b><span>tafel</span></div><div class="tegen">
+    <span class="n ${w1?"won":""}">${esc(p.p1)}${nieuwLabel(p.nieuw)}</span><span class="c num">${gespeeld?u.c1+"/"+p.t1:"–"}</span>
     <span class="n ${w2?"won":""}">${esc(p.p2)}</span><span class="c num">${gespeeld?u.c2+"/"+p.t2:"–"}</span>
     <span class="extra num">${gespeeld ? u.brt+" beurten" + (u.u1===0?" · gelijk":"") : u.archief ? "gespeeld in de afgesloten ronde" : "nog niet ingevoerd"}</span></div></div>`;
 }
@@ -352,26 +408,37 @@ function uitslagHtml(u, tafel){
 function toonUitslagen(){
   const el = $("#v-uitslagen");
   const vd = vandaag();
-  // Speelavonden uit het logboek gaan voor; avonden die daar niet in staan
-  // worden zoals voorheen afgeleid uit de wedstrijdlijst en de stand.
-  const perDatum = {};
-  (D.programma||[]).filter(x => x.datum <= vd).forEach(x => perDatum[x.datum] = x);
-  (D.uitslagen||[]).filter(x => x.datum <= vd && x.wedstrijden && x.wedstrijden.length)
-    .forEach(x => perDatum[x.datum] = {datum: x.datum, wedstrijden: x.wedstrijden, log: true});
-  const dagen = Object.values(perDatum).sort((a,b)=>b.datum.localeCompare(a.datum));
+  const data = new Set([...(D.uitslagen||[]).map(x => x.datum), ...(D.programma||[]).map(x => x.datum)]);
+  const dagen = [...data].filter(d => d && d <= vd).sort((a,b)=>b.localeCompare(a));
   let h = `<h2>Uitslagen</h2>`;
   if(!dagen.length){
     h += `<div class="leeg">Er zijn nog geen uitslagen per speelavond. Alle gespeelde partijen staan op de spelerskaarten.</div>`;
     el.innerHTML = h; return;
   }
-  if(!gekozenDag || !dagen.some(d=>d.datum===gekozenDag)) gekozenDag = dagen[0].datum;
+  if(!gekozenDag || !dagen.includes(gekozenDag)) gekozenDag = dagen[0];
   h += `<div class="kiesdag" role="group" aria-label="Kies speelavond">` +
-       dagen.map(d=>`<button type="button" data-d="${d.datum}" aria-pressed="${d.datum===gekozenDag}">${kortDatum(d.datum)}</button>`).join("") + `</div>`;
-  const dag = dagen.find(d=>d.datum===gekozenDag);
-  h += `<p class="sub">${esc(datum(dag.datum))}. Het bolletje staat bij de winnaar.</p>`;
-  h += lijstPerRonde(dag, w => { const u = dag.log ? uitslagUitLog(w) : uitslagVan(w, dag); return u ? uitslagHtml(u, w.tafel) : ""; });
+       dagen.map(d=>`<button type="button" data-d="${d}" aria-pressed="${d===gekozenDag}">${kortDatum(d)}</button>`).join("") + `</div>`;
+  h += `<p class="sub">${esc(datum(gekozenDag))}. Het bolletje staat bij de winnaar.</p>`;
+  const L = logDag(gekozenDag);
+  if(L){
+    h += lijstPerRonde(L.wedstrijden, logHtml);
+  } else {
+    const dag = (D.programma||[]).find(x => x.datum === gekozenDag);
+    h += lijstPerRonde(dag.wedstrijden, w => { const u = uitslagVan(w, dag); return u ? uitslagHtml(u, w.tafel) : ""; });
+  }
   el.innerHTML = h;
   el.querySelectorAll(".kiesdag button").forEach(b => b.onclick = () => { gekozenDag = b.dataset.d; toonUitslagen(); });
+}
+
+/* ---------- spelers ---------- */
+// Geannuleerde partijen (speler teruggetrokken) van deze speler in ronde nr.
+function geannuleerdVan(naam, nr){
+  const uit = [];
+  (D.uitslagen||[]).forEach(d => d.wedstrijden.forEach(w => {
+    if(w.geannuleerd && w.geannuleerdRonde === nr && (norm(w.p1) === norm(naam) || norm(w.p2) === norm(naam)))
+      uit.push({...w, datum: d.datum});
+  }));
+  return uit.sort((a,b)=>a.datum.localeCompare(b.datum));
 }
 
 function toonSpelers(deel){
@@ -380,9 +447,10 @@ function toonSpelers(deel){
   const L = competitie("lopend");
   if(!L){ el.innerHTML = '<div class="leeg">Er zijn nog geen spelers.</div>'; return; }
   if(!nr0){
-    let h = `<h2>Spelers</h2><p class="sub">Tik op een naam voor de spelerskaart.</p><ul class="namen">`;
+    let h = `<h2>Spelers</h2><p class="sub">Tik op een naam voor de spelerskaart. Op je eigen kaart kun je kiezen voor "Dit ben ik": dan worden jouw partijen overal gemarkeerd.</p><ul class="namen">`;
     [...L.spelers].sort((a,b)=>a.naam.localeCompare(b.naam,"nl")).forEach(s => {
-      h += `<li><a href="#spelers/lopend/${s.nr}">${esc(s.naam)}<span>${s.teMaken} car</span></a></li>`;
+      const kl = [s.teruggetrokken ? "weg" : "", isIk(s.naam) ? "mij" : ""].filter(Boolean).join(" ");
+      h += `<li><a class="${kl}" href="#spelers/lopend/${s.nr}"><b>${esc(s.naam)}</b><span>${s.teruggetrokken ? "teruggetrokken" : s.teMaken + " car"}</span></a></li>`;
     });
     el.innerHTML = h + "</ul>"; return;
   }
@@ -394,9 +462,12 @@ function toonSpelers(deel){
   let h = `<button type="button" class="terug" onclick="history.length>1?history.back():location.hash='#spelers'">Alle spelers</button>`;
   const metSpeler = keuzes().map(x => ({...x, sp: competitie(x.c).spelers.find(z => norm(z.naam) === norm(S.naam))})).filter(x => x.sp);
   h += keuzeHtml(metSpeler, c, x => `onclick="location.replace('#spelers/${x.c}/${x.sp.nr}')"`);
-  h += `<div class="kaart-kop"><h2>${esc(S.naam)}</h2><p class="sub">${esc(rondeNaam(C.ronde))}${c==="nieuw"?" (nieuw)":c.startsWith("r")?" (afgesloten)":""} · te maken: ${S.teMaken} caramboles</p></div>
+  const ik = isIk(S.naam);
+  h += `<div class="kaart-kop"><h2>${esc(S.naam)}${S.teruggetrokken ? ' <span class="lab grijs">teruggetrokken</span>' : ""}</h2>
+    <p class="sub">${esc(rondeNaam(C.ronde))}${c==="nieuw"?" (nieuw)":c.startsWith("r")?" (afgesloten)":""} · te maken: ${S.teMaken} caramboles</p>
+    <button type="button" class="ikben" id="ikben" aria-pressed="${ik}">${ik ? "★ Dit ben ik" : "☆ Dit ben ik"}</button></div>
     <div class="cijfers num">
-      <div><b>${S.plaats ?? "–"}</b><span>plaats</span></div>
+      <div><b>${S.teruggetrokken ? "–" : (S.plaats ?? "–")}</b><span>plaats</span></div>
       <div><b>${nl(S.punten, puntDec(c))}</b><span>punten</span></div>
       <div><b>${nl(S.moy,3)}</b><span>moyenne</span></div>
       <div><b>${S.wed||0}</b><span>gespeeld</span></div>
@@ -412,63 +483,146 @@ function toonSpelers(deel){
     });
     h += `</tbody></table>`;
   } else {
-    h += `<div class="leeg">Nog geen partijen gespeeld in deze ronde.</div>`;
+    h += `<div class="leeg">${S.teruggetrokken ? "Teruggetrokken uit deze ronde: geen partijen die meetellen." : "Nog geen partijen gespeeld in deze ronde."}</div>`;
   }
-  const gespeeld = new Set(S.partijen.map(p=>p.tegen));
-  const open = C.spelers.filter(s => s.nr !== S.nr && !gespeeld.has(s.nr)).map(s=>s.naam).sort((a,b)=>a.localeCompare(b,"nl"));
-  if(c.startsWith("r")){ el.innerHTML = h; return; }
-  h += `<h2>Nog te spelen</h2>`;
-  h += open.length ? `<ul class="open">${open.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>` : `<p class="sub">Alle partijen van deze ronde zijn gespeeld.</p>`;
+
+  // Geannuleerde partijen (speler teruggetrokken): tellen niet mee.
+  const G = c === "nieuw" ? [] : geannuleerdVan(S.naam, nrVan(c));
+  if(G.length){
+    h += `<h3>Geannuleerd</h3><p class="sub">Deze partijen tellen niet mee, omdat een speler zich heeft teruggetrokken.</p>
+      <table class="num"><thead><tr><th>Tegen</th><th>Car</th><th>Brt</th><th>Datum</th></tr></thead><tbody>`;
+    G.forEach(w => {
+      const links = norm(w.p1) === norm(S.naam);
+      h += `<tr class="geann"><td>${esc(links ? w.p2 : w.p1)}</td><td>${links ? w.c1 + "/" + w.tm1 : w.c2 + "/" + w.tm2}</td><td>${w.brt}</td><td>${kortDatum(w.datum)}</td></tr>`;
+    });
+    h += `</tbody></table>`;
+  }
+
+  if(!c.startsWith("r")){
+    h += `<h2>Nog te spelen</h2>`;
+    if(S.teruggetrokken){
+      h += `<p class="sub">Teruggetrokken uit deze ronde: geen wedstrijden meer.</p>`;
+    } else {
+      const gespeeld = new Set(S.partijen.map(p=>p.tegen));
+      const open = C.spelers.filter(s => s.nr !== S.nr && !s.teruggetrokken && !gespeeld.has(s.nr)).map(s=>s.naam).sort((a,b)=>a.localeCompare(b,"nl"));
+      h += open.length ? `<ul class="open">${open.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>` : `<p class="sub">Alle partijen van deze ronde zijn gespeeld.</p>`;
+    }
+  }
   el.innerHTML = h;
+  $("#ikben").onclick = () => {
+    if(isIk(S.naam)) opslag.weg(OPSLAG_IK); else opslag.zet(OPSLAG_IK, S.naam);
+    route(false);
+  };
 }
 
+/* ---------- kampioen ---------- */
 function toonKampioen(){
   const el = $("#v-kampioen");
   const K = D.kampioen;
   if(!K || !K.spelers.length){ el.innerHTML = '<div class="leeg">De kampioensstand is nog niet beschikbaar.</div>'; return; }
   const gebruikt = K.rondes.map((_,i) => K.spelers.some(s => (s.rondes[i].wed||0) > 0));
-  let h = `<h2>Kampioen ${esc(D.seizoen||"")}</h2><p class="sub">Alle rondes van het seizoen samen. Plaats 1 is de kampioen.</p><ol class="stand">`;
+  const L = competitie("lopend");
+  let h = `<h2>Kampioen ${esc(D.seizoen||"")}</h2><p class="sub">Alle rondes van het seizoen samen. Plaats 1 is de kampioen. Tik op een naam voor de spelerskaart.</p><ol class="stand">`;
   [...K.spelers].sort((a,b)=>(a.totaal.plaats??99)-(b.totaal.plaats??99)).forEach(s => {
     const r = s.rondes.map((x,i)=> gebruikt[i] && x.wed ? `ronde ${i+1}: ${x.plaats}e` : null).filter(Boolean).join(", ");
-    h += `<li class="${s.totaal.plaats===1?"p1":""}"><a href="#kampioen" onclick="return false" style="cursor:default">
-      <span class="pl num">${s.totaal.plaats ?? "–"}</span>
+    const nr = L ? spelerNr(L, s.naam) : null;
+    const binnen = `<span class="pl num">${s.totaal.plaats ?? "–"}</span>
       <span><span class="nm">${esc(s.naam)}</span><br><span class="det num">${s.totaal.wed||0} gespeeld · moy ${nl(s.totaal.moy,3)}${r?"<br>"+r:""}</span></span>
-      <span class="pt num">${nl(s.totaal.punten,1)}<small>punten</small></span></a></li>`;
+      <span class="pt num">${nl(s.totaal.punten,1)}<small>punten</small></span>`;
+    const kl = [s.totaal.plaats===1 ? "p1" : "", isIk(s.naam) ? "mij" : ""].filter(Boolean).join(" ");
+    h += `<li class="${kl}">${nr ? `<a href="#spelers/lopend/${nr}">${binnen}</a>` : `<div class="rij">${binnen}</div>`}</li>`;
   });
   el.innerHTML = h + "</ol>";
 }
 
 /* ---------- navigatie ---------- */
-function route(){
+function route(bovenaan = true){
   if(!D) return;
   const delen = (location.hash.replace(/^#/,"") || "stand").split("/");
   const v = ["stand","programma","uitslagen","spelers","kampioen"].includes(delen[0]) ? delen[0] : "stand";
   document.querySelectorAll("main section").forEach(s => s.hidden = s.id !== "v-"+v);
   document.querySelectorAll("nav.tabs a").forEach(a => a.dataset.v === v ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
   ({stand: toonStand, programma: toonProgramma, uitslagen: toonUitslagen, spelers: () => toonSpelers(delen.slice(1)), kampioen: toonKampioen})[v]();
-  window.scrollTo(0,0);
+  if(bovenaan) window.scrollTo(0,0);
 }
-window.addEventListener("hashchange", route);
+window.addEventListener("hashchange", () => route(true));
 
-async function laad(){
+/* ---------- laden ---------- */
+function kopregel(){
+  const [dd, tijd] = (D.bijgewerkt||"").split("T");
+  const tekst = dd ? "Bijgewerkt " + kortDatum(dd) + (tijd ? " " + tijd : "") : "";
+  $("#kopregel").innerHTML = (offline ? '<span class="off">offline</span>' : "") + esc(tekst);
+  $("#voet").textContent = D.volgendeSpeeldag ? "Volgende speeldag: " + datum(D.volgendeSpeeldag) + "." : "";
+  $("#melding").innerHTML = "";
+}
+
+// Afgesloten rondes veranderen niet meer: gewoon uit de browsercache of
+// de opslag op de telefoon, en pas nadat de stand al op het scherm staat.
+async function laadArchief(){
+  const nieuw = (D.archief||[]).filter(a => !ARCH[a.nr]);
+  if(!nieuw.length) return;
+  let erbij = false;
+  nieuw.forEach(a => {
+    const t = opslag.lees(OPSLAG_ARCH + a.bestand);
+    if(t){ try{ const j = JSON.parse(t); if(j && j.competitie){ ARCH[a.nr] = j.competitie; erbij = true; } }catch(e){} }
+  });
+  if(erbij) route(false);
+  const res = await Promise.allSettled(nieuw.map(a =>
+    fetch(a.bestand).then(x => x.ok ? x.text() : null).then(t => {
+      if(!t) return false;
+      const j = JSON.parse(t);
+      if(!j || !j.competitie) return false;
+      const was = !!ARCH[a.nr];
+      ARCH[a.nr] = j.competitie;
+      opslag.zet(OPSLAG_ARCH + a.bestand, t);
+      return !was;
+    })));
+  if(res.some(r => r.status === "fulfilled" && r.value)) route(false);
+}
+
+async function laad(eersteKeer){
+  laatsteLaad = Date.now();
   try{
     const r = await fetch("data.json?t=" + Date.now(), {cache: "no-store"});
     if(!r.ok) throw new Error(r.status);
-    D = await r.json();
-    await Promise.allSettled((D.archief||[]).filter(a => !ARCH[a.nr]).map(a =>
-      fetch(a.bestand + "?t=" + Date.now(), {cache: "no-store"}).then(x => x.ok ? x.json() : null)
-        .then(j => { if(j && j.competitie) ARCH[a.nr] = j.competitie; })));
-    const [dd, tijd] = (D.bijgewerkt||"").split("T");
-    $("#kopregel").textContent = (dd ? "Bijgewerkt " + kortDatum(dd) + (tijd?" "+tijd:"") : "");
-    $("#voet").textContent = D.volgendeSpeeldag ? "Volgende speeldag: " + datum(D.volgendeSpeeldag) + "." : "";
-    route();
+    const tekst = await r.text();
+    const j = JSON.parse(tekst);
+    const veranderd = !D || j.bijgewerkt !== D.bijgewerkt || offline;
+    offline = false;
+    if(veranderd){
+      D = j;
+      opslag.zet(OPSLAG_DATA, tekst);
+      kopregel();
+      route(eersteKeer);        // bij terugkeren: niet naar boven springen
+      laadArchief();
+    }
   }catch(e){
-    $("#kopregel").textContent = "Niet geladen";
-    $("#v-stand").innerHTML = '<div class="leeg fout">De gegevens konden niet worden geladen. Controleer de internetverbinding en vernieuw de pagina.</div>';
+    offline = true;
+    if(!D){
+      const t = opslag.lees(OPSLAG_DATA);
+      if(t){ try{ D = JSON.parse(t); }catch(_){ D = null; } }
+      if(D){ kopregel(); route(true); laadArchief(); }
+    } else {
+      kopregel();
+    }
+    if(!D){
+      $("#kopregel").textContent = "Niet geladen";
+      $("#melding").innerHTML = '<div class="leeg fout">De gegevens konden niet worden geladen. Controleer de internetverbinding en vernieuw de pagina.</div>';
+      document.querySelectorAll("main section").forEach(s => s.hidden = true);
+    }
   }
 }
-document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible" && D) laad(); });
-laad();
+
+// Terug in de app (na een tijdje): kijken of er iets nieuws is.
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible" && Date.now() - laatsteLaad > 60000) laad(false);
+});
+window.addEventListener("online", () => laad(false));
+laad(true);
+
+if("serviceWorker" in navigator && location.protocol === "https:"){
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 </script>
 </body>
 </html>
